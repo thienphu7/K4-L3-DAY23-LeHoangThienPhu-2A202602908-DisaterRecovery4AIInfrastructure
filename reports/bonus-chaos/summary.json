@@ -1,0 +1,182 @@
+{
+  "runs": [
+    {
+      "valid": true,
+      "invalid_reasons": [],
+      "warnings": [],
+      "killed_region": "a",
+      "recovered_by_region": "b",
+      "t_outage_iso": "2026-10-09T04:47:00",
+      "chaos_mode": "netblock",
+      "breakdown_seconds_from_t0": {
+        "user_thay_loi_dau_tien": 0.3,
+        "health_check_phat_hien": 15.7,
+        "dns_cutover": 31.1,
+        "request_thanh_cong_dau_tien": 34.9
+      },
+      "health_check_config": {
+        "interval_s": 5.0,
+        "threshold": 3,
+        "detect_floor_s": 15.0
+      },
+      "rto_measured_s": 34.9,
+      "rto_target_s": 300,
+      "rto_verdict": "PASS",
+      "rpo_at_restore_s": 0.0,
+      "docs_lost": 0,
+      "requests_failed": 17,
+      "evidence": {
+        "loadgen": "reports\\bonus-chaos\\run-1\\traffic.jsonl",
+        "chaos": "reports\\bonus-chaos\\run-1\\chaos.jsonl",
+        "health": "reports\\bonus-chaos\\run-1\\health.jsonl",
+        "failover": "reports\\bonus-chaos\\run-1\\failover.jsonl"
+      },
+      "run": 1,
+      "kill_delay_s": 11.624326258129727,
+      "random_seed": 23
+    },
+    {
+      "valid": true,
+      "invalid_reasons": [],
+      "warnings": [],
+      "killed_region": "a",
+      "recovered_by_region": "b",
+      "t_outage_iso": "2026-10-09T04:43:07",
+      "chaos_mode": "stop",
+      "breakdown_seconds_from_t0": {
+        "user_thay_loi_dau_tien": 0.4,
+        "health_check_phat_hien": 15.8,
+        "dns_cutover": 31.2,
+        "request_thanh_cong_dau_tien": 34.7
+      },
+      "health_check_config": {
+        "interval_s": 5.0,
+        "threshold": 3,
+        "detect_floor_s": 15.0
+      },
+      "rto_measured_s": 34.7,
+      "rto_target_s": 300,
+      "rto_verdict": "PASS",
+      "rpo_at_restore_s": 0.0,
+      "docs_lost": 0,
+      "requests_failed": 17,
+      "evidence": {
+        "loadgen": "reports\\bonus-chaos\\run-2\\traffic.jsonl",
+        "chaos": "reports\\bonus-chaos\\run-2\\chaos.jsonl",
+        "health": "reports\\bonus-chaos\\run-2\\health.jsonl",
+        "failover": "reports\\bonus-chaos\\run-2\\failover.jsonl"
+      },
+      "run": 2,
+      "kill_delay_s": 11.462166720242896,
+      "random_seed": 23
+    },
+    {
+      "valid": true,
+      "invalid_reasons": [],
+      "warnings": [],
+      "killed_region": "a",
+      "recovered_by_region": "b",
+      "t_outage_iso": "2026-10-09T04:43:58",
+      "chaos_mode": "netblock",
+      "breakdown_seconds_from_t0": {
+        "user_thay_loi_dau_tien": 0.4,
+        "health_check_phat_hien": 15.3,
+        "dns_cutover": 30.8,
+        "request_thanh_cong_dau_tien": 35.0
+      },
+      "health_check_config": {
+        "interval_s": 5.0,
+        "threshold": 3,
+        "detect_floor_s": 15.0
+      },
+      "rto_measured_s": 35.0,
+      "rto_target_s": 300,
+      "rto_verdict": "PASS",
+      "rpo_at_restore_s": 0.0,
+      "docs_lost": 0,
+      "requests_failed": 17,
+      "evidence": {
+        "loadgen": "reports\\bonus-chaos\\run-3\\traffic.jsonl",
+        "chaos": "reports\\bonus-chaos\\run-3\\chaos.jsonl",
+        "health": "reports\\bonus-chaos\\run-3\\health.jsonl",
+        "failover": "reports\\bonus-chaos\\run-3\\failover.jsonl"
+      },
+      "run": 3,
+      "kill_delay_s": 7.085383005143226,
+      "random_seed": 23
+    },
+    {
+      "valid": true,
+      "invalid_reasons": [],
+      "warnings": [],
+      "killed_region": "a",
+      "recovered_by_region": "b",
+      "t_outage_iso": "2026-10-09T04:44:56",
+      "chaos_mode": "netblock",
+      "breakdown_seconds_from_t0": {
+        "user_thay_loi_dau_tien": 0.3,
+        "health_check_phat_hien": 13.1,
+        "dns_cutover": 28.6,
+        "request_thanh_cong_dau_tien": 32.7
+      },
+      "health_check_config": {
+        "interval_s": 5.0,
+        "threshold": 3,
+        "detect_floor_s": 15.0
+      },
+      "rto_measured_s": 32.7,
+      "rto_target_s": 300,
+      "rto_verdict": "PASS",
+      "rpo_at_restore_s": 0.0,
+      "docs_lost": 0,
+      "requests_failed": 16,
+      "evidence": {
+        "loadgen": "reports\\bonus-chaos\\run-4\\traffic.jsonl",
+        "chaos": "reports\\bonus-chaos\\run-4\\chaos.jsonl",
+        "health": "reports\\bonus-chaos\\run-4\\health.jsonl",
+        "failover": "reports\\bonus-chaos\\run-4\\failover.jsonl"
+      },
+      "run": 4,
+      "kill_delay_s": 9.118737041174807,
+      "random_seed": 23
+    },
+    {
+      "valid": true,
+      "invalid_reasons": [],
+      "warnings": [],
+      "killed_region": "a",
+      "recovered_by_region": "b",
+      "t_outage_iso": "2026-10-09T04:45:50",
+      "chaos_mode": "stop",
+      "breakdown_seconds_from_t0": {
+        "user_thay_loi_dau_tien": 0.2,
+        "health_check_phat_hien": 14.6,
+        "dns_cutover": 30.1,
+        "request_thanh_cong_dau_tien": 34.5
+      },
+      "health_check_config": {
+        "interval_s": 5.0,
+        "threshold": 3,
+        "detect_floor_s": 15.0
+      },
+      "rto_measured_s": 34.5,
+      "rto_target_s": 300,
+      "rto_verdict": "PASS",
+      "rpo_at_restore_s": 0.0,
+      "docs_lost": 0,
+      "requests_failed": 17,
+      "evidence": {
+        "loadgen": "reports\\bonus-chaos\\run-5\\traffic.jsonl",
+        "chaos": "reports\\bonus-chaos\\run-5\\chaos.jsonl",
+        "health": "reports\\bonus-chaos\\run-5\\health.jsonl",
+        "failover": "reports\\bonus-chaos\\run-5\\failover.jsonl"
+      },
+      "run": 5,
+      "kill_delay_s": 7.6515147062374025,
+      "random_seed": 23
+    }
+  ],
+  "mean_rto_s": 34.36,
+  "sample_stddev_s": 0.9476286192385696,
+  "random_seed": 23
+}

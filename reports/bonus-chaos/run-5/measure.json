@@ -1,0 +1,35 @@
+{
+  "valid": true,
+  "invalid_reasons": [],
+  "warnings": [],
+  "killed_region": "a",
+  "recovered_by_region": "b",
+  "t_outage_iso": "2026-10-09T04:45:50",
+  "chaos_mode": "stop",
+  "breakdown_seconds_from_t0": {
+    "user_thay_loi_dau_tien": 0.2,
+    "health_check_phat_hien": 14.6,
+    "dns_cutover": 30.1,
+    "request_thanh_cong_dau_tien": 34.5
+  },
+  "health_check_config": {
+    "interval_s": 5.0,
+    "threshold": 3,
+    "detect_floor_s": 15.0
+  },
+  "rto_measured_s": 34.5,
+  "rto_target_s": 300,
+  "rto_verdict": "PASS",
+  "rpo_at_restore_s": 0.0,
+  "docs_lost": 0,
+  "requests_failed": 17,
+  "evidence": {
+    "loadgen": "reports\\bonus-chaos\\run-5\\traffic.jsonl",
+    "chaos": "reports\\bonus-chaos\\run-5\\chaos.jsonl",
+    "health": "reports\\bonus-chaos\\run-5\\health.jsonl",
+    "failover": "reports\\bonus-chaos\\run-5\\failover.jsonl"
+  },
+  "run": 5,
+  "kill_delay_s": 7.6515147062374025,
+  "random_seed": 23
+}
