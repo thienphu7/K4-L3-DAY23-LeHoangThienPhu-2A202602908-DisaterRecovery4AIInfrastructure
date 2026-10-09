@@ -1,40 +1,51 @@
-# RTO/RPO Evidence — Lab 23 (TEMPLATE — sinh viên điền bằng SỐ CỦA MÌNH)
+# RTO/RPO Evidence — Lab 23
+Windows bare-mode, 2026-10-09. The runner maps Unix suspension/resume to Windows NtSuspendProcess/NtResumeProcess. Serving, loadgen, measurement and chaos safety checks remain unchanged. This is a Windows adaptation, not a claim of Linux execution.
 
-Quy tắc duy nhất: mỗi con số ở đây phải trỏ được về **một dòng log thật**
-(`đường/dẫn.jsonl:số_dòng`). `pytest tests/test_rto_evidence.py` sẽ mở từng file ra kiểm tra.
-Con số không có evidence = trượt, bất kể các phần khác.
+## 1. Baseline
+| Metric | Value | Evidence |
+|---|---|---|
+| Outage UTC | 2026-10-09T04:36:43 | `chaos/chaos-events.jsonl:1` |
+| First failed request | +0.4s | `reports/drill-1-nodr.jsonl:17` |
+| Failed requests after outage | 16 | `reports/measure-drill-1.json` |
+| Recovery | NO_RECOVERY within the 40-second experiment | `reports/measure-drill-1.json` |
 
-## 1. Drill 1 — không có DR (baseline)
+Baseline has no checker/cutover; missing-event warnings are expected. NO_RECOVERY is bounded by the observed window.
 
-| Chỉ số | Giá trị | Cách đo | Evidence |
+## 2. DR timeline
+| Milestone | Seconds from outage | Evidence |
+|---|---|---|
+| Outage UTC 04:37:33 | 0s | `chaos/chaos-events.jsonl:3` |
+| First user error | 0.5s | `reports/drill-2-withdr.jsonl:25` |
+| A detected UNHEALTHY | 15.3s | `reports/health-events.jsonl:2` |
+| Incident / operator confirmation | 24.8s | `reports/runbook-run.jsonl:2` |
+| Restore complete | 24.9s | `reports/failover-events.jsonl:2` |
+| B ready | 31.1s | `reports/failover-events.jsonl:4` |
+| DNS/LB cutover | 31.1s | `reports/failover-events.jsonl:5` |
+| First recovered request from B | 35.3s | `reports/drill-2-withdr.jsonl:42` |
+
+| Metric | Measured | Target | Verdict | Evidence |
+|---|---|---|---|---|
+| Inference RTO | 35.3s | 300s | PASS | `reports/measure-drill-2.json` |
+| Vector DB RPO at restore | 12.01s / 6 docs missing | 300s | PASS | `reports/failover-events.jsonl:2` |
+| Validity | true, warnings empty | valid drill | PASS | `reports/measure-drill-2.json` |
+| Direct B golden signals | p95 31 ms, 0/10 errors | p95 <500 ms, errors <1% | PASS for this sample | `reports/runbook-run.jsonl:6` |
+
+B restored 215 documents, weights and vi-e5-base@v3 embedding version: `reports/runbook-run.jsonl:4`. Golden signals address B directly; edge recovery is separately proven by traffic line 42.
+
+## 3. RTO composition
+| Component | Duration | Evidence / derivation | Improvement |
 |---|---|---|---|
-| t_outage | `<iso>` | chaos kill | `chaos/chaos-events.jsonl:1` |
-| Request fail đầu tiên | `+__s` | dòng `ok:false` đầu tiên sau t_outage | `reports/drill-1-nodr.jsonl:__` |
-| Request thành công sau đó | không có | không có dòng `ok:true` nào sau t_outage | `reports/measure-drill-1.json` |
-| RTO | `NO_RECOVERY` | `tools/measure_rto.py` | `reports/measure-drill-1.json` |
+| Configured health detect floor | 15.000s | interval 5 × threshold 3; `reports/health-events.jsonl:2` | Faster polling costs more probes and greater sensitivity to transient failures |
+| Detection phase/timeout residual | 0.324s | actual detection minus configured budget; `chaos/chaos-events.jsonl:3`, `reports/health-events.jsonl:2` | Parallel, deadline-aware probes |
+| Confirmation / incident / target verification | 9.533s | detect to verify; `reports/runbook-run.jsonl:1`, `reports/failover-events.jsonl:1` | Reuse recent alert evidence, keep operator approval |
+| Snapshot restore | 0.024s | restore minus verify; `reports/failover-events.jsonl:2` | Incremental snapshots for real large models |
+| GPU warm-up and ready polling | 6.240s | ready minus scale; waited_s=6.235; `reports/failover-events.jsonl:4` | Full standby costs compute |
+| Ready-to-cutover bookkeeping | 0.028s | cutover minus ready; `reports/failover-events.jsonl:5` | Negligible here |
+| DNS/LB cache plus next traffic sample | 4.196s | first recovered request minus cutover; `reports/drill-2-withdr.jsonl:42` | Lower TTL costs control-plane work |
+| Total before rounding | 35.345s | sum of disjoint intervals, rounds to 35.3s | Optimize largest contributor first |
 
-## 2. Drill 2 — có DR
+The four named components alone omit confirmation overhead. TTL is configured to 5 seconds; remaining cache lifetime depends on phase. Loadgen timestamps request starts, not completions.
 
-| Mốc | +giây từ t_outage | Cách đo | Evidence |
-|---|---|---|---|
-| t_outage (mốc 0) | 0 | `action:kill` | `chaos/chaos-events.jsonl:__` |
-| User thấy lỗi đầu tiên | | dòng `ok:false` đầu | `reports/drill-2-withdr.jsonl:__` |
-| Health check phát hiện | | `to:UNHEALTHY, region:a` | `reports/health-events.jsonl:__` |
-| Snapshot restore xong | | `step:2_restore_snapshot` | `reports/failover-events.jsonl:__` |
-| Region phụ ready | | `step:4_wait_ready` | `reports/failover-events.jsonl:__` |
-| DNS cutover | | `step:5_dns_cutover` | `reports/failover-events.jsonl:__` |
-| **RTO đo được** | | dòng `ok:true` đầu sau lỗi | `reports/drill-2-withdr.jsonl:__` |
+GUIDE calls interval × threshold a floor. Precisely, scheduled instantaneous probes may detect after roughly 10–15 seconds depending on phase; timeouts and sequential probing add delay. Observed detection 15.324 seconds satisfies the rubric's configured budget check.
 
-| Chỉ số | Đo được | Mục tiêu (slide §1) | Verdict |
-|---|---|---|---|
-| RTO — Inference API | `__s` | 300s (5 phút) | |
-| RPO — Vector DB | `__s` / `__` doc | 300s (5 phút) | |
-
-## 3. RTO của tôi gồm những gì (bắt buộc — đây là phần chấm điểm hiểu bài)
-
-| Thành phần | Giây | Nó đến từ đâu | Giảm được bằng cách nào |
-|---|---|---|---|
-| Health-check detect floor | | `interval_s × threshold` trong `reports/health-events.jsonl:__` | |
-| Snapshot restore | | 2_restore → 3_scale | |
-| GPU pool warm-up | | `waited_s` ở `4_wait_ready` | |
-| DNS/LB TTL cache | | t_recovered − t_cutover | |
+RPO uses latest primary minus latest restored document timestamp and counts missing docs from SQLite at restore. Ingest and replication read the filesystem independently and continue while the serving API is suspended. This simulator does not demonstrate loss of all region storage or a production guarantee for acknowledged writes. Later primary writes are not included in restore-time loss.
