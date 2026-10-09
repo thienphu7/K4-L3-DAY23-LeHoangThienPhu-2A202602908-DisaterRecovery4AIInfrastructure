@@ -30,12 +30,38 @@ URL = {"a": "http://127.0.0.1:8001", "b": "http://127.0.0.1:8002"}
 
 def probe(region: str, timeout: float) -> tuple[bool, str]:
     """TODO: trả về (ready, reason). Timeout PHẢI có — netblock làm request treo mãi."""
-    raise NotImplementedError
+    try:
+        response = httpx.get(f"{URL[region]}/readyz", timeout=timeout)
+        return response.status_code == 200, response.text
+    except httpx.HTTPError as exc:
+        return False, str(exc)
 
 
 def run(interval: float, timeout: float, threshold: int, duration: float, out: pathlib.Path):
     """TODO: vòng lặp poll + phát hiện transition + ghi JSONL."""
-    raise NotImplementedError
+    if interval <= 0 or threshold < 1:
+        raise ValueError("interval > 0 and threshold >= 1 required")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    states = {r: "HEALTHY" for r in URL}
+    fails = dict.fromkeys(URL, 0)
+    end = time.monotonic() + duration
+    with out.open("a", encoding="utf-8") as log:
+        while time.monotonic() < end:
+            started = time.monotonic()
+            for region in URL:
+                ready, reason = probe(region, timeout)
+                fails[region] = 0 if ready else fails[region] + 1
+                new = "HEALTHY" if ready else (
+                    "UNHEALTHY" if fails[region] >= threshold else states[region])
+                if new != states[region]:
+                    rec = dict(ts=time.time(), event="state_change", region=region,
+                               to=new, reason=reason, interval_s=interval,
+                               threshold=threshold, consecutive_fails=fails[region])
+                    log.write(json.dumps(rec) + "\n")
+                    log.flush()
+                    states[region] = new
+            time.sleep(max(0, min(interval - (time.monotonic() - started),
+                                 end - time.monotonic())))
 
 
 if __name__ == "__main__":

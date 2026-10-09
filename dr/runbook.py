@@ -35,22 +35,71 @@ sys.path.insert(0, ".")
 from dr import failover as fo  # noqa: E402
 
 LOG = pathlib.Path("reports/runbook-run.jsonl")
+CHAOS_LOG = pathlib.Path("chaos/chaos-events.jsonl")
 URL = {"a": "http://127.0.0.1:8001", "b": "http://127.0.0.1:8002"}
 
 
 def step(n, name, **kw):
     """TODO: ghi 1 dòng {ts, iso, step, name, ...} vào LOG."""
-    raise NotImplementedError
+    rec = dict(ts=time.time(), iso=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+               step=n, name=name, **kw)
+    LOG.parent.mkdir(parents=True, exist_ok=True)
+    with LOG.open("a", encoding="utf-8") as log:
+        log.write(json.dumps(rec) + "\n")
+    print(json.dumps(rec), flush=True)
+    return rec
 
 
 def confirm(auto: bool, msg: str) -> bool:
     """TODO: auto=True -> True; ngược lại hỏi y/N. Đừng bỏ hàm này đi."""
-    raise NotImplementedError
+    return auto or input(msg + " [y/N] ").strip().lower() == "y"
 
 
 def run(primary: str, target: str, backend: str, auto: bool) -> dict:
     """TODO: 7 bước ở trên."""
-    raise NotImplementedError
+    from dr.health_checker import probe
+    if primary == target:
+        return dict(ok=False, reason="primary_equals_target")
+    for _ in range(3):
+        ready, reason = probe(primary, 2)
+        if ready:
+            return dict(ok=False, reason="primary_ready")
+        try:
+            alive = httpx.get(f"{URL[target]}/healthz", timeout=2).status_code == 200
+        except httpx.HTTPError:
+            alive = False
+        if not alive:
+            return dict(ok=False, reason="target_not_alive")
+        time.sleep(1)
+    step(1, "xac_nhan_outage", primary=primary, target=target, consecutive_fails=3)
+    if not confirm(auto, f"Confirm failover {primary} -> {target}?"):
+        return dict(ok=False, reason="operator_declined")
+    kills = [json.loads(line) for line in CHAOS_LOG.read_text().splitlines()
+             if line.strip()]
+    outage = next(e["ts"] for e in reversed(kills)
+                  if e.get("action") == "kill" and e.get("region") == primary)
+    started = time.time()
+    step(2, "thong_bao_incident", t_outage=outage, notification_delay_s=started-outage, auto=auto)
+    result = fo.failover(target, backend, wait=60)
+    step(3, "scale_gpu_pool", result=result)
+    if not result.get("ok"):
+        return result
+    step(4, "verify_state_replica", state=result["state"])
+    step(5, "dns_cutover", ok=result["ok"], target=target)
+    latencies, errors = [], 0
+    for _ in range(10):
+        tick = time.monotonic()
+        try:
+            response = httpx.get(f"{URL[target]}/v1/infer", timeout=3)
+            errors += int(response.status_code != 200 or response.json().get("region") != target)
+        except (httpx.HTTPError, ValueError):
+            errors += 1
+        latencies.append((time.monotonic()-tick)*1000)
+    step(6, "verify_golden_signals", requests=10, p95_ms=round(sorted(latencies)[9], 2),
+         error_rate=errors/10, scope="target_direct")
+    step(7, "post_incident", elapsed_s=time.time()-outage, operator_elapsed_s=time.time()-started,
+         measure_command="python tools/measure_rto.py --loadgen reports/drill-2-withdr.jsonl")
+    return dict(**result, golden_errors=errors)
 
 
 if __name__ == "__main__":
